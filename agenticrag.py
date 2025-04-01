@@ -8,6 +8,15 @@ from langchain.llms import OpenAI
 from langchain.chains import RetrievalQA
 import os
 
+# Load API keys securely
+openai_api_key = st.secrets.get("OPENAI_API_KEY", "")
+weather_api_key = st.secrets.get("OPENWEATHER_API_KEY", "")
+flight_api_key = st.secrets.get("FLIGHT_API_KEY", "")
+
+if not openai_api_key:
+    st.error("Missing OpenAI API key. Please add it to Streamlit Secrets.")
+    st.stop()  # Stop execution if no API key
+
 # Function to load and vectorize PDFs
 def load_and_vectorize_pdfs(pdf_folder):
     """Loads and vectorizes PDFs from the specified folder."""
@@ -16,19 +25,21 @@ def load_and_vectorize_pdfs(pdf_folder):
         if file.endswith(".pdf"):
             loader = PyPDFLoader(os.path.join(pdf_folder, file))
             documents.extend(loader.load())
-    
+
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     docs = text_splitter.split_documents(documents)
     
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)  # Pass API key explicitly
     vectorstore = FAISS.from_documents(docs, embeddings)
     return vectorstore
 
 # Function to fetch live weather data
 def get_weather(city):
     """Fetch real-time weather information using OpenWeatherMap API."""
-    api_key = os.getenv("OPENWEATHER_API_KEY_1")
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+    if not weather_api_key:
+        return "Weather API key is missing."
+    
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={weather_api_key}&units=metric"
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
@@ -39,8 +50,10 @@ def get_weather(city):
 # Function to fetch flight details
 def get_flight_details(origin, destination, date):
     """Fetch real-time flight details using an external API."""
-    api_key = os.getenv("FLIGHT_API_KEY")
-    url = f"https://api.flightapi.io/search/{api_key}/{origin}/{destination}/{date}"
+    if not flight_api_key:
+        return "Flight API key is missing."
+
+    url = f"https://api.flightapi.io/search/{flight_api_key}/{origin}/{destination}/{date}"
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
@@ -57,14 +70,6 @@ def main():
     
     st.title("🌍 Agentic AI Travel Assistant")
     st.write("Hello! I'm your AI travel assistant, ready to help you with:")
-
-# API Key Handling
-if "openai_api_key" not in st.session_state:
-    st.session_state["openai_api_key"] = st.secrets.get("OPENAI_API_KEY_1", "")
-
-if not st.session_state["openai_api_key"]:
-    st.warning("Please add your OpenAI API key in Streamlit Secrets to proceed.")
-    
 
     features = {
         "📍 Places": "Get details about cities, landmarks, and hidden gems.",
@@ -84,9 +89,9 @@ if not st.session_state["openai_api_key"]:
     pdf_folder = "brochures"  # Folder where PDFs are stored
     vectorstore = load_and_vectorize_pdfs(pdf_folder)
     retriever = vectorstore.as_retriever()
-    llm = OpenAI()
-   # Initialize OpenAI LLM
-    #llm = ChatOpenAI(model_name="gpt-4o", openai_api_key=st.session_state["openai_api_key"])
+
+    # Initialize OpenAI LLM with API Key
+    llm = OpenAI(openai_api_key=openai_api_key)
     qa_chain = RetrievalQA(llm=llm, retriever=retriever)
     
     if st.button("Get Information"):
@@ -105,6 +110,6 @@ if not st.session_state["openai_api_key"]:
             else:
                 response = qa_chain.run(user_query)
             st.success(f"**{user_query}**: {response}")
-    
+
 if __name__ == "__main__":
     main()
