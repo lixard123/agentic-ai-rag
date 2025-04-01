@@ -58,6 +58,14 @@ def main():
     st.title("🌍 Agentic AI Travel Assistant")
     st.write("Hello! I'm your AI travel assistant, ready to help you with:")
 
+# API Key Handling
+if "openai_api_key" not in st.session_state:
+    st.session_state["openai_api_key"] = st.secrets.get("OPENAI_API_KEY", "")
+
+if not st.session_state["openai_api_key"]:
+    st.warning("Please add your OpenAI API key in Streamlit Secrets to proceed.")
+    
+
     features = {
         "📍 Places": "Get details about cities, landmarks, and hidden gems.",
         "🌦️ Weather": "Real-time weather forecasts for any location.",
@@ -76,7 +84,9 @@ def main():
     pdf_folder = "brochures"  # Folder where PDFs are stored
     vectorstore = load_and_vectorize_pdfs(pdf_folder)
     retriever = vectorstore.as_retriever()
-    llm = OpenAI()
+    #llm = OpenAI()
+    # Initialize OpenAI LLM
+    llm = ChatOpenAI(model_name="gpt-4o", openai_api_key=st.session_state["openai_api_key"])
     qa_chain = RetrievalQA(llm=llm, retriever=retriever)
     
     if st.button("Get Information"):
