@@ -60,7 +60,7 @@ def main():
 
 # API Key Handling
 if "openai_api_key" not in st.session_state:
-    st.session_state["openai_api_key"] = st.secrets.get("OPENAI_API_KEY", "")
+    st.session_state["openai_api_key"] = st.secrets.get("OPENAI_API_KEY_1", "")
 
 if not st.session_state["openai_api_key"]:
     st.warning("Please add your OpenAI API key in Streamlit Secrets to proceed.")
@@ -84,9 +84,9 @@ if not st.session_state["openai_api_key"]:
     pdf_folder = "brochures"  # Folder where PDFs are stored
     vectorstore = load_and_vectorize_pdfs(pdf_folder)
     retriever = vectorstore.as_retriever()
-    #llm = OpenAI()
-    # Initialize OpenAI LLM
-    llm = ChatOpenAI(model_name="gpt-4o", openai_api_key=st.session_state["openai_api_key"])
+    llm = OpenAI()
+    Initialize OpenAI LLM
+    #llm = ChatOpenAI(model_name="gpt-4o", openai_api_key=st.session_state["openai_api_key"])
     qa_chain = RetrievalQA(llm=llm, retriever=retriever)
     
     if st.button("Get Information"):
