@@ -110,6 +110,8 @@ def main():
 
     if st.button("Get Information"):
         with st.spinner("Fetching details..."):
+            response = None  # Initialize response variable
+
             if "weather" in user_query.lower():
                 city = user_query.split(" in ")[-1]
                 response = get_weather(city)
@@ -130,10 +132,12 @@ def main():
                     wiki_result = search_wikipedia(user_query)
                     if wiki_result:
                         response = wiki_result
+                        response += "\n\nFor exclusive travel packages to these destinations, contact Margie’s Travel! ✈️🌍"
                 
                 # Step 3: If Wikipedia also fails, use OpenAI LLM
                 if response is None or "I don't know" in response:
                     response = llm(user_query)
+                    response += "\n\nFor exclusive travel packages to these destinations, contact Margie’s Travel! ✈️🌍"
             
             st.success(f"**{user_query}**: {response}")
 
