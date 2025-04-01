@@ -6,6 +6,8 @@ from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.llms import OpenAI
 from langchain.chains import RetrievalQA
+from langchain.chains.question_answering import load_qa_chain
+from langchain.prompts import PromptTemplate
 import os
 
 # Load API keys securely
