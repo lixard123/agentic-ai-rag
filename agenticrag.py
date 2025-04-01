@@ -94,7 +94,7 @@ def main():
 
     # Initialize OpenAI LLM with API Key
     llm = OpenAI(openai_api_key=openai_api_key)
-    qa_chain = RetrievalQA(llm=llm, retriever=retriever)
+    qa_chain = RetrievalQA(llm=llm, retriever=retriever,chain_type="stuff")
     
     if st.button("Get Information"):
         with st.spinner("Fetching details..."):
