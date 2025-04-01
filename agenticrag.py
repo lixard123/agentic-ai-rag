@@ -27,7 +27,7 @@ def load_and_vectorize_pdfs(pdf_folder):
 # Function to fetch live weather data
 def get_weather(city):
     """Fetch real-time weather information using OpenWeatherMap API."""
-    api_key = os.getenv("OPENWEATHER_API_KEY")
+    api_key = os.getenv("OPENWEATHER_API_KEY_1")
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
     response = requests.get(url)
     if response.status_code == 200:
