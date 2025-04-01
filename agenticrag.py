@@ -85,7 +85,7 @@ if not st.session_state["openai_api_key"]:
     vectorstore = load_and_vectorize_pdfs(pdf_folder)
     retriever = vectorstore.as_retriever()
     llm = OpenAI()
-    Initialize OpenAI LLM
+   # Initialize OpenAI LLM
     #llm = ChatOpenAI(model_name="gpt-4o", openai_api_key=st.session_state["openai_api_key"])
     qa_chain = RetrievalQA(llm=llm, retriever=retriever)
     
