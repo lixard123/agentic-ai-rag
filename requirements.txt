@@ -3,6 +3,7 @@ langchain
 faiss-cpu
 openai
 PyMuPDF
+pypdf
 python-dotenv
 requests
 wikipedia
