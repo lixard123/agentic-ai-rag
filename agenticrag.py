@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import wikipedia
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.document_loaders import PyPDFLoader
@@ -17,7 +18,7 @@ if not openai_api_key:
     st.error("Missing OpenAI API key. Please add it to Streamlit Secrets.")
     st.stop()
 
-# 🟢 Cache document processing (FAISS embedding) to avoid reloading on every run
+# 🟢 Cache document processing (FAISS embedding)
 @st.cache_resource(show_spinner=False)
 def load_and_vectorize_pdfs(pdf_folder):
     """Loads and vectorizes PDFs from the specified folder (cached)."""
@@ -35,7 +36,7 @@ def load_and_vectorize_pdfs(pdf_folder):
     return vectorstore
 
 # 🟢 Cache weather data for 30 minutes
-@st.cache_data(ttl=1800)  # Cache for 30 minutes
+@st.cache_data(ttl=1800)  
 def get_weather(city):
     """Fetch real-time weather information (cached)."""
     if not weather_api_key:
@@ -49,7 +50,7 @@ def get_weather(city):
     return "Weather data not available."
 
 # 🟢 Cache flight data for 1 hour
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=3600)  
 def get_flight_details(origin, destination, date):
     """Fetch real-time flight details (cached)."""
     if not flight_api_key:
@@ -63,6 +64,17 @@ def get_flight_details(origin, destination, date):
             flight = data["flights"][0]
             return f"Flight {flight['flight_number']} from {flight['departure']} to {flight['arrival']} on {flight['date']} at {flight['time']}"
     return "Flight data not available."
+
+# Wikipedia Lookup
+def search_wikipedia(query):
+    """Search Wikipedia for general knowledge if FAISS has no answer."""
+    try:
+        summary = wikipedia.summary(query, sentences=2)
+        return summary
+    except wikipedia.exceptions.DisambiguationError as e:
+        return f"Multiple results found: {e.options[:3]}"
+    except wikipedia.exceptions.PageError:
+        return None  # No Wikipedia page found
 
 def main():
     st.set_page_config(page_title="Agentic AI Travel Assistant", page_icon="🌍", layout="centered")
@@ -110,7 +122,18 @@ def main():
                 else:
                     response = "Please specify the flight origin and destination."
             else:
+                # Step 1: Try FAISS Vector Store First
                 response = qa_chain.run(user_query)
+
+                # Step 2: If FAISS returns no answer, try Wikipedia
+                if "I don't know" in response or len(response.strip()) < 5:
+                    wiki_result = search_wikipedia(user_query)
+                    if wiki_result:
+                        response = wiki_result
+                
+                # Step 3: If Wikipedia also fails, use OpenAI LLM
+                if response is None or "I don't know" in response:
+                    response = llm(user_query)
             
             st.success(f"**{user_query}**: {response}")
 
